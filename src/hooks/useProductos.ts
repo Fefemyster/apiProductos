@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ChangeEvent, type FormEvent } from "react";
+import { useState, useCallback, type ChangeEvent, type FormEvent } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import type { FormData } from "../types/FormData";
@@ -53,33 +53,12 @@ const useUser = () => {
 
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === "price" || name === "categoryId" ? Number(value) : value,
+      [name]: value,
     }));
   };
 
-  useEffect(() => {
-    void fetchProducts();
-  }, [fetchProducts]);
-
   const hanldleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Validación de campos
-    const missing: string[] = [];
-    if (!formData.title || formData.title.trim() === "") missing.push("Título");
-    if (!formData.description || formData.description.trim() === "")
-      missing.push("Descripción");
-    if (typeof formData.price !== "number" || formData.price <= 0)
-      missing.push("Precio (mayor que 0)");
-    if (typeof formData.categoryId !== "number" || formData.categoryId <= 0)
-      missing.push("ID de Categoría");
-    if (!formData.images || formData.images.length === 0 || !formData.images[0])
-      missing.push("Imagen");
-
-    if (missing.length > 0) {
-      errorAlert(`Por favor complete los siguientes campos: ${missing.join(", ")}`);
-      return;
-    }
-
     setLoading(true);
 
     try {

@@ -1,4 +1,4 @@
-import type { ProductApi } from "./ProductApi";
+import type { ProductApi } from "./ProductoApi";
 
 export interface ProductListProps {
   products: ProductApi[];
