@@ -1,4 +1,5 @@
 import type { ProductFormProps } from "../types/ProductFormProps";
+import Swal from "sweetalert2";
 
 const ProductForm = ({
   formData,
@@ -9,12 +10,42 @@ const ProductForm = ({
   setProductToEdit,
   loading,
 }: ProductFormProps) => {
+  const onSubmit = (e: any) => {
+    e.preventDefault();
+
+    const missing: string[] = [];
+    if (!formData.title || formData.title.trim() === "") missing.push("Título");
+    if (!formData.description || formData.description.trim() === "")
+      missing.push("Descripción");
+
+    const price = Number(formData.price);
+    if (isNaN(price) || price <= 0) missing.push("Precio (mayor que 0)");
+
+    const categoryId = Number(formData.categoryId);
+    if (isNaN(categoryId) || categoryId <= 0)
+      missing.push("ID de Categoria (mayor que 0)");
+
+    if (!formData.images || formData.images.length === 0 || !formData.images[0])
+      missing.push("Imagen");
+
+    if (missing.length > 0) {
+      Swal.fire({
+        title: "Faltan campos",
+        text: `Por favor complete: ${missing.join(", ")}`,
+        icon: "error",
+      });
+      return;
+    }
+
+    handleSubmit(e);
+  };
+
   return (
     <div className="bg-white p-6 md:p-10 rounded-3xl shadow-2xl mb-12">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">
         {productToEdit ? "Editar Producto" : "Añadir Nuevo Producto"}
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-6">
         <div>
           <label className="block text-gray-700 font-medium mb-2">Título</label>
           <input
