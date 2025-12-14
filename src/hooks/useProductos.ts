@@ -92,7 +92,7 @@ const useUser = () => {
         ],
       });
       setProductToEdit(null);
-      await fetchUsers();
+      await fetchProducts();
     } catch (error) {
       errorAlert("Error al guardar el usuario. Verifique los datos.");
       console.error(error);
@@ -126,7 +126,7 @@ const useUser = () => {
 
       if (result.isConfirmed) {
         await axios.delete(`${API_URL}/${id}`);
-        await fetchUsers();
+        await fetchProducts();
         successAlert("Usuario eliminado correctamente");
       }
     } catch (error) {
