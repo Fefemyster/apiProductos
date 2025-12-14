@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, useEffect, useCallback, type ChangeEvent, type FormEvent } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import type { FormData } from "../types/FormData";
@@ -18,22 +18,21 @@ const useUser = () => {
     ],
   });
 
-  const API_URL = "https://api.escuelajs.co/api/v1/users";
-
-  const fetchProducts = async () => {
+  const API_URL = "https://api.escuelajs.co/api/v1/products";
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get<ProductApi[]>(API_URL);
       setProducts(response.data);
     } catch (err) {
       errorAlert(
-        "No se pudo cargar los paroductos. Por favor, intente de nuevo más tarde."
+        "No se pudo cargar los productos. Por favor, intente de nuevo más tarde."
       );
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const successAlert = (mensaje: string) => {
     Swal.fire({
@@ -49,21 +48,38 @@ const useUser = () => {
     });
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: name === "price" || name === "categoryId" ? Number(value) : value,
     }));
   };
 
+  useEffect(() => {
+    void fetchProducts();
+  }, [fetchProducts]);
+
   const hanldleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // Validación de campos
+    const missing: string[] = [];
+    if (!formData.title || formData.title.trim() === "") missing.push("Título");
+    if (!formData.description || formData.description.trim() === "")
+      missing.push("Descripción");
+    if (typeof formData.price !== "number" || formData.price <= 0)
+      missing.push("Precio (mayor que 0)");
+    if (typeof formData.categoryId !== "number" || formData.categoryId <= 0)
+      missing.push("ID de Categoría");
+    if (!formData.images || formData.images.length === 0 || !formData.images[0])
+      missing.push("Imagen");
+
+    if (missing.length > 0) {
+      errorAlert(`Por favor complete los siguientes campos: ${missing.join(", ")}`);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -74,12 +90,12 @@ const useUser = () => {
           description: formData.description,
           images: formData.images,
         });
-        successAlert("Usuario actualizado correctamemnte.");
+        successAlert("Producto actualizado correctamente.");
       } else {
         await axios.post(API_URL, {
           ...formData,
         });
-        successAlert("Usuario creado correctamente.");
+        successAlert("Producto creado correctamente.");
       }
 
       setFormData({
@@ -94,8 +110,10 @@ const useUser = () => {
       setProductToEdit(null);
       await fetchProducts();
     } catch (error) {
-      errorAlert("Error al guardar el usuario. Verifique los datos.");
+      errorAlert("Error al guardar el producto. Verifique los datos.");
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,7 +123,7 @@ const useUser = () => {
       title: product.title,
       price: product.price,
       description: product.description,
-      categoryId: product.categoryId || 14,
+      categoryId: product.categoryId || 10,
       images: product.images,
     });
   };
@@ -127,10 +145,10 @@ const useUser = () => {
       if (result.isConfirmed) {
         await axios.delete(`${API_URL}/${id}`);
         await fetchProducts();
-        successAlert("Usuario eliminado correctamente");
+        successAlert("Producto eliminado correctamente");
       }
     } catch (error) {
-      errorAlert("Error al eliminar un usuario");
+      errorAlert("Error al eliminar un producto");
       console.error(error);
     } finally {
       setLoading(false);
